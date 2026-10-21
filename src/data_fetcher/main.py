@@ -2,6 +2,7 @@
 
 import logging
 
+from data_fetcher.database import init_db, save_quotes
 from data_fetcher.scraper import fetch_all_quotes
 
 
@@ -17,19 +18,24 @@ def main() -> None:
     """主函数。"""
     setup_logging()
 
-    url = "https://quotes.toscrape.com/"
-    # 抓取前 3 页
-    quotes = fetch_all_quotes(url, max_pages=3)
+    # 1. 初始化数据库
+    conn = init_db()
 
-    print(f"\n成功抓取到 {len(quotes)} 条名言（前3页）：\n")
+    try:
+        # 2. 抓取数据
+        url = "https://quotes.toscrape.com/"
+        quotes = fetch_all_quotes(url, max_pages=3)
 
-    # 打印前 2 条看看清洗后的数据格式
-    for i, q in enumerate(quotes[:2], 1):
-        print(f"--- 第 {i} 条 ---")
-        print(f"名言: {q['text']}")
-        print(f"作者: {q['author']}")
-        print(f"主页: {q['author_url']}")
-        print(f"标签: {q['tags']}\n")
+        # 3. 存入数据库
+        inserted = save_quotes(conn, quotes)
+
+        print(
+            f"\n✅ 执行完毕！本次爬取 {len(quotes)} 条，实际入库 {inserted} 条（自动去重）。"
+        )
+
+    finally:
+        # 确保关闭数据库连接
+        conn.close()
 
 
 if __name__ == "__main__":
