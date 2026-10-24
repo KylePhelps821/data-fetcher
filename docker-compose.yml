@@ -1,0 +1,12 @@
+services:
+  data-fetcher:
+    build: .
+    image: data-fetcher:v1
+    container_name: daily-fetcher
+    env_file:
+      - .env
+    volumes:
+      # 把生成的 report.html 和 data.db 挂载出来，方便在主机查看
+      - ./report.html:/app/report.html
+      - ./data.db:/app/data.db
+    restart: "no"
